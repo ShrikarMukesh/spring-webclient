@@ -1,6 +1,7 @@
 package com.learnwebclient.service;
 
 import com.learnwebclient.dto.Employee;
+import com.learnwebclient.exception.ClientDataException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -51,14 +52,17 @@ public class EmployeeRestClientTest {
                         ()-> employeeRestClient.retriveEmployeeByID(empid));
     }
 
+    /*
+    Exception Handling using spring WebFlux
+     */
     @Test
     void retriveEmployeeById_custom_error_Handling(){
 
         int empid = 111;
 
         Assertions
-                .assertThrows(WebClientResponseException.class,
-                        ()-> employeeRestClient.retriveEmployeeByID(empid));
+                .assertThrows(ClientDataException.class,
+                        ()-> employeeRestClient.retriveEmployeeByID_custom_error_handling(empid));
     }
 
     @Test
@@ -127,6 +131,14 @@ public class EmployeeRestClientTest {
                 assertThrows(WebClientResponseException.class
                         ,()->employeeRestClient.updateEmployee(200,employee));
 
+    }
+
+    @Test
+    void errorEndpoint(){
+        Assertions.assertThrows(
+                EmployeeServiceException.class
+                ,()->employeeRestClient.errorEndPoint()
+        );
     }
 }
 

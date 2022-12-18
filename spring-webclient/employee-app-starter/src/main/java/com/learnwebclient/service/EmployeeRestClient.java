@@ -1,6 +1,7 @@
 package com.learnwebclient.service;
 
 import com.learnwebclient.dto.Employee;
+import com.learnwebclient.exception.ClientDataException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -16,7 +17,7 @@ import static com.learnwebclient.constants.EmployeeConstants.*;
 @Slf4j
 public class EmployeeRestClient {
 
-     private WebClient webClient;
+    private WebClient webClient;
 
     public EmployeeRestClient(WebClient webClient) {
         this.webClient = webClient;
@@ -51,8 +52,6 @@ public class EmployeeRestClient {
             throw ex;
         }
       }
-
-
 
     public List<Employee> retriveEmployeeByName(String firstName){
 
@@ -133,16 +132,38 @@ public class EmployeeRestClient {
                 .uri(EMPLOYEE_BY_ID, employeeID)
                 .retrieve()
                 .onStatus(HttpStatus::is4xxClientError, clientResponse -> handle4xxError(clientResponse))
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> handle5xxError(clientResponse))
                 .bodyToMono(Employee.class)
                 .block();
+    }
+
+    private Mono<? extends Throwable> handle5xxError(ClientResponse clientResponse) {
+        Mono<String> errorMessage = clientResponse.bodyToMono(String.class);
+        return errorMessage.flatMap((message) -> {
+            log.error("Error Response code is "+ clientResponse.rawStatusCode()
+                    + " and the message is  " + message);
+            throw new EmployeeServiceException(message);
+        });
     }
 
     private Mono<? extends Throwable> handle4xxError(ClientResponse clientResponse) {
         Mono<String> errorMessage = clientResponse.bodyToMono(String.class);
         return errorMessage.flatMap((message) -> {
             log.error("Error Response code is "+ clientResponse.rawStatusCode()
-                    + "and the message is  " + message);
+                    + " and the message is  " + message);
             throw new ClientDataException(message);
         });
+    }
+
+    public String errorEndPoint(){
+        //http://localhost:8081/employeeservice/v1/employee/error
+        return webClient.
+                get()
+                .uri(ERROR_EMPLOYEE_V1)
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> handle4xxError(clientResponse))
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> handle5xxError(clientResponse))
+                .bodyToMono(String.class)
+                .block();
     }
 }
