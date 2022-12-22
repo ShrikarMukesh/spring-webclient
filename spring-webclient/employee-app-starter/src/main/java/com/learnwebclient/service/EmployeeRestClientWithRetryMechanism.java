@@ -42,39 +42,39 @@ public class EmployeeRestClientWithRetryMechanism {
         this.webClient = webClient;
     }
 
-    public Employee retriveEmployeeByIDWithRetryMechanism(int employeeID){
-        try {
-            return webClient.get()
-                    .uri(EMPLOYEE_BY_ID, employeeID)
-                    .retrieve()
-                    .bodyToMono(Employee.class)
-                    .retryWhen(fixedRetry)
-                    .block();
-        }
-        catch (WebClientResponseException ex){
-            log.error("Error Response code is {} and response body is {}" , ex.getRawStatusCode(),
-                    ex.getResponseBodyAsString());
-            log.error("WebClientResponseException is retriveEmployeeByID " , ex);
-            throw ex;
-        }
-        catch (Exception ex){
-            log.error("Exception is retriveEmployeeByID " , ex);
-            throw ex;
-        }
-    }
+//    public Employee retriveEmployeeByIDWithRetryMechanism(int employeeID){
+//        try {
+//            return webClient.get()
+//                    .uri(EMPLOYEE_BY_ID, employeeID)
+//                    .retrieve()
+//                    .bodyToMono(Employee.class)
+//                    .retryWhen(fixedRetry)
+//                    .block();
+//        }
+//        catch (WebClientResponseException ex){
+//            log.error("Error Response code is {} and response body is {}" , ex.getRawStatusCode(),
+//                    ex.getResponseBodyAsString());
+//            log.error("WebClientResponseException is retriveEmployeeByID " , ex);
+//            throw ex;
+//        }
+//        catch (Exception ex){
+//            log.error("Exception is retriveEmployeeByID " , ex);
+//            throw ex;
+//        }
+//    }
 
-    public String errorEndPoint(){
-        //http://localhost:8081/employeeservice/v1/employee/error
-        return webClient.
-                get()
-                .uri(ERROR_EMPLOYEE_V1)
-                .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, clientResponse -> handle4xxError(clientResponse))
-                .onStatus(HttpStatus::is5xxServerError, clientResponse -> handle5xxError(clientResponse))
-                .bodyToMono(String.class)
-                .retryWhen(fixedRetry5xx)
-                .block();
-    }
+//    public String errorEndPoint(){
+//        //http://localhost:8081/employeeservice/v1/employee/error
+//        return webClient.
+//                get()
+//                .uri(ERROR_EMPLOYEE_V1)
+//                .retrieve()
+//                .onStatus(HttpStatus::is4xxClientError, clientResponse -> handle4xxError(clientResponse))
+//                .onStatus(HttpStatus::is5xxServerError, clientResponse -> handle5xxError(clientResponse))
+//                .bodyToMono(String.class)
+//                .retryWhen(fixedRetry5xx)
+//                .block();
+//    }
 
     private Mono<? extends Throwable> handle5xxError(ClientResponse clientResponse) {
         Mono<String> errorMessage = clientResponse.bodyToMono(String.class);
